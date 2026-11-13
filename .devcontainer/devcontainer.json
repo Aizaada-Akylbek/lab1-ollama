@@ -1,0 +1,13 @@
+{
+  "name": "Lab 1 - Ollama in Codespaces",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "hostRequirements": {
+    "cpus": 4,
+    "memory": "16gb"
+  },
+  "forwardPorts": [8000, 11434],
+  "portsAttributes": {
+    "8000": { "label": "Chat page", "onAutoForward": "openBrowser" },
+    "11434": { "label": "Ollama API" }
+  }
+}

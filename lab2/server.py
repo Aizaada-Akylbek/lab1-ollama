@@ -3,6 +3,10 @@ Uses only the Python standard library. Run:  python3 server.py
 """
 import json
 import os
+import shutil
+import subprocess
+import time
+import urllib.request
 import urllib.error
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
@@ -48,7 +52,35 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
 
+OLLAMA_URL = guardrails.OLLAMA_URL
+
+
+def ensure_ollama():
+    """Start 'ollama serve' in the background if it is not already running."""
+    try:
+        urllib.request.urlopen(OLLAMA_URL + "/api/tags", timeout=2)
+        print("Ollama is already running on port 11434.")
+        return
+    except Exception:
+        pass
+    if not shutil.which("ollama"):
+        print("Ollama is not installed. Install it with:  curl -fsSL https://ollama.com/install.sh | sh")
+        return
+    print("Starting Ollama (ollama serve) on port 11434...")
+    subprocess.Popen(["ollama", "serve"], stdout=open("/tmp/ollama.log", "a"),
+                     stderr=subprocess.STDOUT, start_new_session=True)
+    for _ in range(30):
+        try:
+            urllib.request.urlopen(OLLAMA_URL + "/api/tags", timeout=2)
+            print("Ollama is running.")
+            return
+        except Exception:
+            time.sleep(1)
+    print("Ollama did not start - check /tmp/ollama.log")
+
+
 if __name__ == "__main__":
+    ensure_ollama()
     print(f"Guardrails chat running on port {PORT} (model: {guardrails.MODEL})")
     print("Open the PORTS tab and click the globe icon next to port 8000.")
     ThreadingHTTPServer(("0.0.0.0", PORT), Handler).serve_forever()
